@@ -19,6 +19,10 @@ def draw_smth(event):
     # Add the current point to the drawing points list
     drawing_points.append((event.x, event.y))
 
+def clear_canvas():
+    canvas.delete("all")
+    drawing_points.clear()
+
 def save_image():
     # Ask user to select a file path to save the image
     file_path = filedialog.asksaveasfilename(defaultextension=".png")
@@ -44,7 +48,7 @@ def save_image():
 
 # Create the main window
 app = Tk()
-app.geometry("300x300")
+app.geometry("300x335")
 
 # Create a canvas for drawing
 canvas = Canvas(app, bg="white")
@@ -54,9 +58,16 @@ canvas.place(x=0, y=0, width=300, height=300)
 canvas.bind("<Button-1>", get_x_and_y)
 canvas.bind("<B1-Motion>", draw_smth)
 
+nav_frame = Frame(app)
+nav_frame.pack(side="bottom", pady=5)
+
 # Create a button to save the image
-save_button = Button(app, text="Save Image", command=save_image)
-save_button.pack(side="bottom", pady=10)
+save_button = Button(nav_frame, text="Save Image", command=save_image)
+save_button.pack(side="left")
+
+clear_button = Button(nav_frame, text="Clear all", command=clear_canvas)
+clear_button.pack(side="left", padx=10)
+# ...
 
 # Start the main loop
 app.mainloop()

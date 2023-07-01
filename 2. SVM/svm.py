@@ -2,14 +2,31 @@ import sys
 import numpy as np
 import pickle
 from sklearn import model_selection, svm, preprocessing
+from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score,confusion_matrix
 from MNIST_Dataset_Loader.mnist_loader import MNIST
 import matplotlib.pyplot as plt
 from matplotlib import style
 style.use('ggplot')
 
+symbol_dict = {'0':'α', 
+	       '1':'β', 
+		   '2':'γ', 
+		   '3':'δ', 
+		   '4':'λ',
+		   '5':'μ',
+		   '6':'Ω',
+		   '7':'π',
+		   '8':'φ',
+			'9':'θ'}
 
-data = MNIST('./MNIST_Dataset_Loader/dataset/')
+mnist_data = np.load('../data/dataset.npz')
+images = mnist_data['images']
+labels = mnist_data['labels']
+train_img, test_img, train_labels, test_labels = train_test_split(images, labels, test_size=0.1, random_state=42)
+
+
+'''data = MNIST('./MNIST_Dataset_Loader/dataset/')
 
 print('\nLoading Training Data...')
 img_train, labels_train = data.load_training()
@@ -20,13 +37,15 @@ print('\nLoading Testing Data...')
 img_test, labels_test = data.load_testing()
 test_img = np.array(img_test)
 test_labels = np.array(labels_test)
-
+'''
 
 #Features
-X = train_img
+X = train_img.reshape(train_img.shape[0], -1)
+test_img = test_img.reshape(test_img.shape[0], -1)
 
 #Labels
 y = train_labels
+
 
 # Prepare Classifier Training and Testing Data
 print('\nPreparing Classifier Training and Validation Data...')
@@ -77,7 +96,7 @@ print('\nAccuracy of Classifier on Test Images: ',acc)
 a = np.random.randint(1,40,15)
 for i in a:
 	two_d = (np.reshape(test_img[i], (28, 28)) * 255).astype(np.uint8)
-	plt.title('Original Label: {0}  Predicted Label: {1}'.format(test_labels[i],test_labels_pred[i]))
+	plt.title('Original Label: {0}  Predicted Label: {1}'.format(test_labels[i],symbol_dict[str(test_labels_pred[i])]))
 	plt.imshow(two_d, interpolation='nearest',cmap='gray')
 	plt.show()
 #---------------------- EOC ---------------------#'''

@@ -1,9 +1,9 @@
 # K Nearest Neighbors
-
 import sys
 import numpy as np
 import pickle
 from sklearn import model_selection
+from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.metrics import accuracy_score, confusion_matrix
 from MNIST_Dataset_Loader.mnist_loader import MNIST
@@ -12,9 +12,24 @@ from matplotlib import style
 style.use('ggplot')
 
 
+symbol_dict = {'0':'α', 
+	       '1':'β', 
+		   '2':'γ', 
+		   '3':'δ', 
+		   '4':'λ',
+		   '5':'μ',
+		   '6':'Ω',
+		   '7':'π',
+		   '8':'φ',
+			'9':'θ'}
+
+mnist_data = np.load('../data/dataset.npz')
+images = mnist_data['images']
+labels = mnist_data['labels']
+train_img, test_img, train_labels, test_labels = train_test_split(images, labels, test_size=0.1, random_state=42)
 
 
-data = MNIST('./MNIST_Dataset_Loader/dataset/')
+'''data = MNIST('./MNIST_Dataset_Loader/dataset/')
 
 print('\nLoading Training Data...')
 img_train, labels_train = data.load_training()
@@ -25,21 +40,23 @@ print('\nLoading Testing Data...')
 img_test, labels_test = data.load_testing()
 test_img = np.array(img_test)
 test_labels = np.array(labels_test)
-
+'''
 
 #Features
-X = train_img
+X = train_img.reshape(train_img.shape[0], -1)
+test_img = test_img.reshape(test_img.shape[0], -1)
 
 #Labels
 y = train_labels
+
 
 print('\nPreparing Classifier Training and Validation Data...')
 X_train, X_test, y_train, y_test = model_selection.train_test_split(X,y,test_size=0.1)
 
 
-print('\nKNN Classifier with n_neighbors = 5, algorithm = auto, n_jobs = 10')
+print('\nKNN Classifier with n_neighbors = 9, algorithm = auto, n_jobs = 10')
 print('\nPickling the Classifier for Future Use...')
-clf = KNeighborsClassifier(n_neighbors=5,algorithm='auto',n_jobs=10)
+clf = KNeighborsClassifier(n_neighbors=9,algorithm='auto',n_jobs=10)
 clf.fit(X_train,y_train)
 
 with open('MNIST_KNN.pickle','wb') as f:
@@ -72,12 +89,12 @@ acc = accuracy_score(test_labels,test_labels_pred)
 print('\nAccuracy of Classifier on Test Images: ',acc)
 
 
-
-'''# Show the Test Images with Original and Predicted Labels
+'''
+# Show the Test Images with Original and Predicted Labels
 a = np.random.randint(1,50,20)
 for i in a:
-	two_d = (np.reshape(test_img[i], (28, 28)) * 255).astype(np.uint8)
-	plt.title('Original Label: {0}  Predicted Label: {1}'.format(test_labels[i],test_labels_pred[i]))
+	two_d = (np.reshape(test_img[i], (25, 25, 3)) * 255).astype(np.uint8)
+	plt.title('Original Label: {0}  Predicted Label: {1}'.format(test_labels[i],symbol_dict[str(test_labels_pred[i])]))
 	plt.imshow(two_d, interpolation='nearest',cmap='gray')
 	plt.show()
 #------------------------- EOC -----------------------------'''

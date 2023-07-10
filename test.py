@@ -2,6 +2,7 @@ import pickle
 from PIL import Image
 import numpy as np
 import matplotlib.pyplot as plt
+import cv2 as cv
 
 
 symbol_dict = {'0':'α',
@@ -14,6 +15,20 @@ symbol_dict = {'0':'α',
 		   '7':'π',
 		   '8':'φ',
 			'9':'θ'}
+
+def symbol(ind):
+    symbols = ['α',
+	       'β',
+		   'γ',
+		   'δ',
+		   'λ',
+		   'μ',
+		   'Ω',
+		   'π',
+		   'φ',
+			'θ']
+    symb = symbols[ind.argmax()]
+    return symb
 
 
 # Load trained classifier from file
@@ -64,9 +79,25 @@ model_1 = torch.load('model.pth')
 # Load the image and convert it to a grayscale numpy array
 img = Image.open("/content/1e1 (1).png")
 img_array = np.array(img)
-img_array = img_array.astype(np.float32) /255.0
+img_array = img_array.astype(np.float32)
 img_array = torch.from_numpy(img_array)
 data = img_array.permute(2, 0, 1)
 
 
 '''
+
+new_model = tf.keras.models.load_model('/content/my_model.h5')
+new_model.summary()
+
+def prediction(image_path,model):
+    img = cv.imread(image_path, cv.IMREAD_GRAYSCALE)
+    plt.imshow(img, cmap = 'gray')
+    img = cv.resize(img,(25, 25))
+    norm_image = cv.normalize(img, None, alpha = 0, beta = 1, norm_type = cv.NORM_MINMAX, dtype = cv.CV_32F)
+    norm_image = norm_image.reshape((norm_image.shape[0], norm_image.shape[1], 1))
+    case = np.asarray([norm_image])
+    pred = model.predict([case])
+
+    return 'Prediction: ' + symbol(pred)
+
+prediction(model=new_model,)

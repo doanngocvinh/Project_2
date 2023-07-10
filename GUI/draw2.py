@@ -7,6 +7,11 @@ import pickle
 import numpy as np
 from keras.models import load_model
 from tkinter import StringVar
+import pyperclip
+
+
+
+
 
 # Create a dictionary to map predicted digits to symbols
 symbol_dict = {
@@ -98,18 +103,18 @@ def predict():
     image = image.crop((0, 0, image_size[0], image_size[1]))
     image = image.filter(ImageFilter.SHARPEN)
 
-    model_path = selected_model.get()
+    model_name =  selected_model.get()
 
-    if model_path != "my_model.h5" :
+    if model_name != "my_model.h5" :
         image_flat = np.array(image).flatten()
-        with open(model_path, 'rb') as f:
+        with open( model_name, 'rb') as f:
             clf = pickle.load(f)
         digit_pred = clf.predict([image_flat])
         print("Predicted Digit:", symbol_dict[str(digit_pred[0])])
         update_predicted_digit(digit_pred[0])
    
     else :
-        new_model =load_model(model_path)
+        new_model =load_model(model_name)
         image = image.convert('L')
         img_array = np.array(image)
         img_array = img_array / 255.0
@@ -119,6 +124,11 @@ def predict():
         digit_pred = np.argmax(digit_pred, axis=1)
         print("Predicted Digit:", symbol_dict[str(digit_pred[0])])
         update_predicted_digit(digit_pred[0])
+
+def copy_to_clipboard():
+    digit = digit_label.cget("text")
+    pyperclip.copy(digit)
+
 
                
 # Create the main window
@@ -165,6 +175,11 @@ result_label.pack(pady=10)
 # Create a label to show the predicted digit
 digit_label = ttk.Label(result_frame, text="", font=("Arial", 40))
 digit_label.pack()
+
+copy_button = ttk.Button(result_frame, text="Copy", command=copy_to_clipboard)
+copy_button.pack(pady=10)
+
+
 
 # Bind mouse events to canvas
 canvas_pred.bind("<Button-1>", get_x_and_y)

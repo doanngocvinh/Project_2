@@ -48,6 +48,7 @@ def draw_smth(event):
 def clear_canvas():
     canvas_pred.delete("all")
     drawing_points.clear()
+    digit_label.config(text="")
 
 def clear_canvas_tab2():
     canvas_draw.delete("all")
@@ -105,16 +106,24 @@ def predict():
 
     model_name =  selected_model.get()
 
-    if model_name != "my_model.h5" :
+    if model_name == 'CNN model':
+        model = 'my_model.h5'
+    elif model_name == 'SVM model':
+        model = 'MNIST_SVM.pickle'
+    elif model_name == 'KNN model':
+        model = 'MNIST_KNN.pickle'
+
+
+    if model != "my_model.h5" :
         image_flat = np.array(image).flatten()
-        with open( model_name, 'rb') as f:
+        with open( model, 'rb') as f:
             clf = pickle.load(f)
         digit_pred = clf.predict([image_flat])
         print("Predicted Digit:", symbol_dict[str(digit_pred[0])])
         update_predicted_digit(digit_pred[0])
    
     else :
-        new_model =load_model(model_name)
+        new_model =load_model(model)
         image = image.convert('L')
         img_array = np.array(image)
         img_array = img_array / 255.0
@@ -133,10 +142,11 @@ def copy_to_clipboard():
                
 # Create the main window
 root = tk.Tk()
-root.title("ML App")
+root.title("Nhận diện kí tự khó")
+root.resizable(False, False)
 
 selected_model = StringVar(root)
-selected_model.set("my_model.h5")
+selected_model.set("CNN model")
 
 # Create a tab control
 tab_control = ttk.Notebook(root)
@@ -190,7 +200,7 @@ bottom_frame = ttk.Frame(pred_tab)
 bottom_frame.pack(pady=10)
 
 model_combobox = ttk.Combobox(bottom_frame, textvariable=selected_model)
-model_combobox["values"] = ("my_model.h5","MNIST_SVM.pickle", "MNIST_KNN.pickle",)
+model_combobox["values"] = ("CNN model","SVM model", "KNN model",)
 model_combobox.pack(side="left", padx=10)
 
 save_button = ttk.Button(bottom_frame, text="Save Image", command=save_image)

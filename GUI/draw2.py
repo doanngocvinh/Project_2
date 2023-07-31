@@ -68,7 +68,7 @@ def draw_smth_tab2(event):
 
 def save_image():
     # Tạo tên mặc định cho ảnh (ví dụ: "untitled")
-    default_file_name = "untitled"
+    default_file_name = str(np.random.randint(10,10000000))
 
     # Ask user to select a file path to save the image
     file_path = filedialog.asksaveasfilename(defaultextension=".png", initialfile=default_file_name)

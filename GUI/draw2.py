@@ -8,7 +8,10 @@ import numpy as np
 from keras.models import load_model
 from tkinter import StringVar
 import pyperclip
-
+import numpy as np
+import os
+import subprocess
+from tkinter import Listbox
 
 
 
@@ -39,7 +42,7 @@ def get_x_and_y(event):
 def draw_smth(event):
     global last_x, last_y
     canvas_pred.create_line((last_x, last_y, event.x, event.y),
-                       fill='black', width=4)
+                    fill='black', width=4)
     last_x, last_y = event.x, event.y
 
     # Add the current point to the drawing points list
@@ -57,16 +60,31 @@ def clear_canvas_tab2():
 def draw_smth_tab2(event):
     global last_x, last_y
     canvas_draw.create_line((last_x, last_y, event.x, event.y),
-                       fill='black', width=4)
+                    fill='black', width=4)
     last_x, last_y = event.x, event.y
 
     # Add the current point to the drawing points list
     drawing_points.append((event.x, event.y))
 
 def save_image():
+    # Tạo tên mặc định cho ảnh (ví dụ: "untitled")
+    default_file_name = "untitled"
+
     # Ask user to select a file path to save the image
-    file_path = filedialog.asksaveasfilename(defaultextension=".png")
+    file_path = filedialog.asksaveasfilename(defaultextension=".png", initialfile=default_file_name)
+
+    # Nếu người dùng không hủy bỏ việc lưu ảnh và chọn một đường dẫn
     if file_path:
+        # Khởi tạo biến đếm số thứ tự
+     
+
+        # Kiểm tra xem tập tin đã tồn tại
+        while os.path.exists(file_path):
+            # Nếu tập tin đã tồn tại, tạo số thứ tự mới và thêm vào tên tập tin
+            file_name, file_extension = os.path.splitext(file_path)
+            file_path = f"{file_name}(1){file_extension}"
+        
+
         # Create a blank image with white background
         image = Image.new("RGB", (300, 300), "white")
         draw = ImageDraw.Draw(image)
@@ -85,6 +103,9 @@ def save_image():
         # Save the image to the selected file path
         image.save(file_path)
         print("Image saved successfully!")
+
+
+
 
 def update_predicted_digit(digit):
     digit_label.config(text=symbol_dict[str(digit)])
@@ -121,7 +142,7 @@ def predict():
         digit_pred = clf.predict([image_flat])
         print("Predicted Digit:", symbol_dict[str(digit_pred[0])])
         update_predicted_digit(digit_pred[0])
-   
+
     else :
         new_model =load_model(model)
         image = image.convert('L')
@@ -138,8 +159,87 @@ def copy_to_clipboard():
     digit = digit_label.cget("text")
     pyperclip.copy(digit)
 
+def save_npz():
+    data_folder = '../new_data/anh'
+    images = []
+    labels = []
+    # Iterate over subfolders and files
+    for root, directories, files in os.walk(data_folder):
+        for file in files:
+            # Process each file as an image
+            file_path = os.path.join(root, file)
+            
+            # Load the image using PIL
+            image = Image.open(file_path)
+            
+            # Convert the image to numpy array
+            image_array = np.array(image)
+            
+            # Append the image array to the list
+            images.append(image_array)
+            
+            # Extract the label from the subfolder's name
+            label = os.path.split(root)[-1]
+            labels.append(label)
+    # Convert the lists to numpy arrays
+    images = np.array(images)
+    labels = np.array(labels)
+    # Save the data to the .npz file
+    np.savez('../new_data/dataset.npz', images=images, labels=labels)
 
-               
+result = []
+
+def run_knn():
+    global result 
+    try:
+        # Thực thi file Python khác bằng subprocess
+        subprocess.run(['python', '../1.KNN/knn.py'])
+
+        with open('knn_evalute.txt', 'r') as file:
+            for line in file:
+                value = float(line.strip())  # Chuyển đổi từ chuỗi sang số thực
+                result.append(value)
+            print(result)
+
+            # Đưa giá trị đánh giá vào Listbox
+        
+        listbox.insert("end", f"  KNN  Classifier Evaluation: ")
+        listbox.insert("end", f"  Accuracy of Classifier on Validation Image Data: {result[0]}")
+        listbox.insert("end", f"  Accuracy of Classifier on Test Images: {result[1]}")
+        listbox.insert("end", f" ")
+
+
+    except FileNotFoundError:
+        print("Lỗi: Không thể tìm thấy file 'KNN.py'.")
+    result=[]
+
+def run_svm():
+    global result 
+    try:
+        # Thực thi file Python khác bằng subprocess
+        subprocess.run(['python', '../2.SVM/svm.py'])
+
+        with open('svm_evalute.txt', 'r') as file:
+            for line in file:
+                value = float(line.strip())  # Chuyển đổi từ chuỗi sang số thực
+                result.append(value)
+            print(result)
+
+            # Đưa giá trị đánh giá vào Listbox
+        
+        listbox.insert("end", f"  SVM Classifier Evaluation: ")
+        listbox.insert("end", f"  Accuracy of Classifier on Validation Images: {result[0]}")
+        listbox.insert("end", f"  Accuracy of Classifier on Test Images: {result[1]}")
+        listbox.insert("end", f" ")
+
+
+    except FileNotFoundError:
+        print("Lỗi: Không thể tìm thấy file 'SVM.py'.")
+    result=[]
+
+def clear_listbox(listbox_widget):
+    listbox_widget.delete(0, tk.END)
+            
 # Create the main window
 root = tk.Tk()
 root.title("Nhận diện kí tự khó")
@@ -150,14 +250,17 @@ selected_model.set("CNN model")
 
 # Create a tab control
 tab_control = ttk.Notebook(root)
+tab_control.pack(fill=tk.BOTH, expand=True)
 
 # Create a frame for the drawing tab
 drawing_tab = ttk.Frame(tab_control)
 pred_tab = ttk.Frame(tab_control)
+train_tab = ttk.Frame(tab_control)
 
 # Add the drawing tab to the tab control
 tab_control.add(pred_tab, text="Predict")
 tab_control.add(drawing_tab, text="Drawing")
+tab_control.add(train_tab, text="Train Model")
 
 # Pack the tab control
 tab_control.pack(expand=1, fill="both")
@@ -235,5 +338,39 @@ save_button.pack(side="left")
 clear_button = Button(nav_frame, text="Clear all", command=clear_canvas_tab2)
 clear_button.pack(side="left", padx=10)
 
+
+"""
+TRAIN TAB
+"""
+left_frame = ttk.Frame(train_tab)
+left_frame.pack(side="left")
+evaluation_values = [4.5, 3.8, 5.0, 4.2, 3.9]
+
+# Tạo và hiển thị Listbox trong right_frame
+listbox = Listbox(train_tab, width=40, height=21)
+listbox.pack(side="top", fill="both", expand=True, padx=20,pady=10)  
+
+
+save_folder = ttk.Button(left_frame, text="Save Npz File", command=save_npz)
+save_folder.pack(side='top', pady=5,padx=2)
+
+train_knn = ttk.Button(left_frame, text="Train KNN", command=run_knn)
+train_knn.pack(side='top', pady=5,padx=2)
+
+train_svm = ttk.Button(left_frame, text="Train SVM", command=run_svm)
+train_svm.pack(side='top', pady=5,padx=2)
+
+clear_button = ttk.Button(left_frame, text="Clear", command=lambda: clear_listbox(listbox))
+clear_button.pack(side='top', pady=5,padx=2)
+
+
+
+
+
+
+
+
 # Start the main loop
 root.mainloop()
+
+

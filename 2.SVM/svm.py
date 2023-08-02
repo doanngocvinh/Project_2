@@ -9,16 +9,21 @@ import matplotlib.pyplot as plt
 from matplotlib import style
 style.use('ggplot')
 
-symbol_dict = {'0':'α', 
-	       '1':'β', 
-		   '2':'γ', 
-		   '3':'δ', 
-		   '4':'λ',
-		   '5':'μ',
-		   '6':'Ω',
-		   '7':'π',
-		   '8':'φ',
-			'9':'θ'}
+symbol_dict = {
+    '0': 'α',
+    '1': 'β',
+    '2': 'γ',
+    '3': 'δ',
+    '4': 'λ',
+    '5': 'μ',
+    '6': 'Ω',
+    '7': 'π',
+    '8': 'φ',
+    '9': 'θ',
+    '10':'h',
+    '11':'Y',
+    '12':'đ'
+}
 
 mnist_data = np.load('../new_data/dataset.npz')
 images = mnist_data['images']

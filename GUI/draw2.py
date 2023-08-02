@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import *
 from tkinter import filedialog
-from PIL import Image, ImageDraw, ImageFilter
+from PIL import Image, ImageDraw, ImageFilter,ImageTk
 import pickle
 import numpy as np
 from keras.models import load_model
@@ -27,7 +27,10 @@ symbol_dict = {
     '6': 'Ω',
     '7': 'π',
     '8': 'φ',
-    '9': 'θ'
+    '9': 'θ',
+    '10':'h',
+    '11':'Y',
+    '12':'đ'
 }
 
 # Global variables
@@ -105,7 +108,40 @@ def save_image():
         print("Image saved successfully!")
 
 
+def save_origin_image():
+    # Tạo tên mặc định cho ảnh (ví dụ: "untitled")
+    default_file_name = str(np.random.randint(10,10000000))
 
+    # Ask user to select a file path to save the image
+    file_path = filedialog.asksaveasfilename(defaultextension=".png", initialfile=default_file_name)
+
+    # Nếu người dùng không hủy bỏ việc lưu ảnh và chọn một đường dẫn
+    if file_path:
+        # Khởi tạo biến đếm số thứ tự
+     
+
+        # Kiểm tra xem tập tin đã tồn tại
+        while os.path.exists(file_path):
+            # Nếu tập tin đã tồn tại, tạo số thứ tự mới và thêm vào tên tập tin
+            file_name, file_extension = os.path.splitext(file_path)
+            file_path = f"{file_name}(1){file_extension}"
+        
+
+        # Create a blank image with white background
+        image = Image.new("RGB", (300, 300), "white")
+        draw = ImageDraw.Draw(image)
+
+        # Draw the lines from the drawing points onto the image
+        for i in range(1, len(drawing_points)):
+            x1, y1 = drawing_points[i-1]
+            x2, y2 = drawing_points[i]
+            draw.line((x1, y1, x2, y2), fill="black", width=4)
+
+        # Resize and crop the image to the desired size
+
+        # Save the image to the selected file path
+        image.save(file_path)
+        print("Image saved successfully!")
 
 def update_predicted_digit(digit):
     digit_label.config(text=symbol_dict[str(digit)])
@@ -186,6 +222,8 @@ def save_npz():
     labels = np.array(labels)
     # Save the data to the .npz file
     np.savez('../new_data/dataset.npz', images=images, labels=labels)
+    listbox.insert(0,"  Save npz file successfull")
+    listbox.insert("end")
 
 result = []
 
@@ -239,6 +277,24 @@ def run_svm():
 
 def clear_listbox(listbox_widget):
     listbox_widget.delete(0, tk.END)
+
+selected_image = None
+
+def open_image():
+    global selected_image
+    # Hiển thị hộp thoại file dialog để chọn một ảnh
+    file_path = filedialog.askopenfilename(filetypes=[("Image files", "*.png;*.jpg;*.jpeg;*.gif")])
+
+    # Nếu người dùng không hủy bỏ và đã chọn một ảnh
+    if file_path:
+        # Mở ảnh đã chọn bằng thư viện PIL
+        pil_image = Image.open(file_path)
+
+        # Chuyển đổi PIL.Image thành ImageTk.PhotoImage
+        selected_image = ImageTk.PhotoImage(pil_image)
+
+        # Hiển thị ảnh lên canvas_pred
+        canvas_pred.create_image(0, 0, anchor="nw", image=selected_image)
             
 # Create the main window
 root = tk.Tk()
@@ -271,7 +327,7 @@ PREDICT TAB
 
 # Create a frame to hold the canvas
 canvas_frame = ttk.Frame(pred_tab)
-canvas_frame.pack(fill="both", expand=True, padx=10, pady=10)
+canvas_frame.pack(fill="both", expand=True, padx=10, pady=4)
 
 # Create a canvas for draw
 canvas_pred = Canvas(canvas_frame, bg="white", width=300, height=300)
@@ -300,23 +356,39 @@ canvas_pred.bind("<B1-Motion>", draw_smth)
 
 # Create a frame for buttons
 bottom_frame = ttk.Frame(pred_tab)
-bottom_frame.pack(pady=10)
+bottom_frame.pack(pady=5)
 
 model_combobox = ttk.Combobox(bottom_frame, textvariable=selected_model)
 model_combobox["values"] = ("CNN model","SVM model", "KNN model",)
-model_combobox.pack(side="left", padx=10)
+
 
 save_button = ttk.Button(bottom_frame, text="Save Image", command=save_image)
-save_button.pack(side="left")
+
 
 # Create a button to predict the image
 pred_button = ttk.Button(bottom_frame, text="Predict", command=predict)
-pred_button.pack(side="left", padx=10)
+
+
+open_image_button = ttk.Button(bottom_frame, text="Open Image", command=open_image)
+
+
+save_button2 = ttk.Button(bottom_frame, text="Save Origin", command=save_origin_image)
+
+
+
 
 # Create a button to clear the canvas
 clear_button = ttk.Button(
     bottom_frame, text="Clear All", command=clear_canvas)
-clear_button.pack(side="left")
+
+model_combobox.grid(row=0, column=0, padx=12, pady=3)
+save_button.grid(row=0, column=1, padx=12, pady=3)
+pred_button.grid(row=0, column=2, padx=12, pady=3)
+
+# Đặt các component hàng dưới
+open_image_button.grid(row=1, column=0, padx=12, pady=3)
+save_button2.grid(row=1, column=1, padx=12, pady=3)
+clear_button.grid(row=1, column=2, padx=12, pady=3)
 
 """
 DRAWING TAB
@@ -328,14 +400,14 @@ canvas_draw.place(relx=0.5, rely=0.45, anchor="center", width=300, height=300)
 canvas_draw.bind("<Button-1>", get_x_and_y)
 canvas_draw.bind("<B1-Motion>", draw_smth_tab2)
 
-nav_frame = Frame(drawing_tab)
+nav_frame = ttk.Frame(drawing_tab)
 nav_frame.pack(side="bottom", pady=5)
 
 # Create a button to save the image
-save_button = Button(nav_frame, text="Save Image", command=save_image)
+save_button = ttk.Button(nav_frame, text="Save Image", command=save_image)
 save_button.pack(side="left")
 
-clear_button = Button(nav_frame, text="Clear all", command=clear_canvas_tab2)
+clear_button = ttk.Button(nav_frame, text="Clear all", command=clear_canvas_tab2)
 clear_button.pack(side="left", padx=10)
 
 
@@ -362,11 +434,6 @@ train_svm.pack(side='top', pady=5,padx=2)
 
 clear_button = ttk.Button(left_frame, text="Clear", command=lambda: clear_listbox(listbox))
 clear_button.pack(side='top', pady=5,padx=2)
-
-
-
-
-
 
 
 
